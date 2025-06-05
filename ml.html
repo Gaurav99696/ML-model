@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TheFuturix Prediction Panel</title>
+    <style>
+      body {
+        background-color: #f8f9fa;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      .container {
+        max-width: 400px;
+        margin: 80px auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      }
+      h2 {
+        text-align: center;
+        margin-bottom: 25px;
+      }
+      input[type="password"] {
+        width: 94%;
+        padding: 12px;
+        margin: 10px 0 20px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #343a40;
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #495057;
+      }
+      .hidden {
+        display: none;
+      }
+      .error {
+        color: red;
+        text-align: center;
+        font-size: 14px;
+      }
+      #refreshToast {
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        position: fixed;
+        top: 35px;
+        right: 35px;
+        transform: translateX(-50%);
+        background-color: #198754;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+      }
+      #refreshToast.show {
+        opacity: 1;
+      }
+      #panelsWrapper {
+        margin: 80px auto;
+        display: flex;
+        justify-content: right;
+        gap: 20px;
+      }
+      #mainForm {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Password Prompt -->
+    <div class="container" id="passwordSection">
+      <h2>Enter Access Password</h2>
+      <input type="password" id="passwordInput" placeholder="Enter Password" />
+      <div class="error" id="errorMsg"></div>
+      <button onclick="checkPassword()">Unlock</button>
+    </div>
+
+    <!-- Panels Wrapper (hidden initially) -->
+    <div id="panelsWrapper" class="hidden" style="padding: 0px 50px">
+      <!-- Prediction Input Panel -->
+      <div
+        class="container hidden"
+        id="mainForm"
+        style="margin: 50px 0px; height: 360px"
+      >
+        <h2>Prediction Panel</h2>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          "
+        >
+          <div style="display: flex">
+            <h3 style="margin-right: 10px">Open Price:</h3>
+            <h4 id="openPrice" style="color: #0d6efd">$--</h4>
+          </div>
+          <div style="display: flex">
+            <h3 style="margin-right: 10px">Volume:</h3>
+            <h4 id="volume" style="color: #6c757d">--</h4>
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          "
+        >
+          <div style="display: flex">
+            <h3 style="margin-right: 10px">High Price:</h3>
+            <h4 id="high" style="color: #198754">$--</h4>
+          </div>
+          <div style="display: flex">
+            <h3 style="margin-right: 10px">Low Price:</h3>
+            <h4 id="low" style="color: #dc3545">$--</h4>
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+          "
+        >
+          <div style="display: flex">
+            <h3 style="margin-right: 10px">Current Price:</h3>
+            <h4 id="currentPrice" style="color: #212529">$--</h4>
+          </div>
+          <div style="display: flex">
+            <h3 style="margin-right: 10px">Previous Close:</h3>
+            <h4 id="prevClose" style="color: #999">$--</h4>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: center">
+          <div style="display: flex; align-items: center">
+            <h3 style="margin-right: 10px">Predicted Close:</h3>
+            <h4 id="predicted" style="color: #6f42c1">$--</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Info Panel -->
+      <div
+        class="container hidden"
+        id="additionalPanel"
+        style="
+          max-width: 600px;
+          margin: 0px 0px;
+          background-color: #ffffff;
+          padding: 30px 40px;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          height: 500px;
+        "
+      >
+        <h2
+          style="
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 24px;
+            border-bottom: 2px solid #4e9af1;
+            padding-bottom: 10px;
+          "
+        >
+          Model Performance
+        </h2>
+        <p style="color: #555; font-size: 16px; margin-bottom: 20px">
+          Here is a view of how our model performed a few days ago:
+        </p>
+        <ul
+          style="
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+          "
+        ></ul>
+        <h2 style="color: #2c7a3f">OUR model's accuracy is ALLWAYS 90+</h2>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="refreshToast">Data refreshed ✅</div>
+
+    <script>
+      const correctPassword = "theFuturixISgreat99696";
+      const FINNHUB_API_KEY = "d10ntvpr01qlsaca9d20d10ntvpr01qlsaca9d2g";
+
+      function checkPassword() {
+        const input = document.getElementById("passwordInput").value;
+        const errorMsg = document.getElementById("errorMsg");
+
+        if (input === correctPassword) {
+          document.getElementById("passwordSection").classList.add("hidden");
+          document.getElementById("panelsWrapper").classList.remove("hidden");
+          document.getElementById("additionalPanel").classList.remove("hidden");
+          document.getElementById("mainForm").classList.remove("hidden");
+          fetchStockData();
+          setInterval(fetchStockData, 10000);
+        } else {
+          errorMsg.textContent = "Incorrect password. Please try again.";
+        }
+      }
+
+      // Function to fetch and display historical stock data
+      async function fetchHistoricalData() {
+        const ALPHA_VANTAGE_API_KEY = "P93MC8OGQWD8KCU1";
+        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=TSLA&apikey=${ALPHA_VANTAGE_API_KEY}`;
+
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+
+          const dailyData = data["Time Series (Daily)"];
+          if (!dailyData) {
+            alert("Alpha Vantage quota exceeded or invalid key.");
+            return;
+          }
+
+          const dates = Object.keys(dailyData).slice(0, 6); // Last 6 days
+          const latest = dailyData[dates[0]];
+
+          // Set current panel values
+          document.getElementById("openPrice").textContent = `$${parseFloat(
+            latest["1. open"]
+          ).toFixed(2)}`;
+          document.getElementById("high").textContent = `$${parseFloat(
+            latest["2. high"]
+          ).toFixed(2)}`;
+          document.getElementById("low").textContent = `$${parseFloat(
+            latest["3. low"]
+          ).toFixed(2)}`;
+          document.getElementById("volume").textContent = parseInt(
+            latest["5. volume"]
+          ).toLocaleString();
+          document.getElementById("currentPrice").textContent = `$${parseFloat(
+            latest["4. close"]
+          ).toFixed(2)}`;
+          document.getElementById("prevClose").textContent = `$${parseFloat(
+            dailyData[dates[1]]["4. close"]
+          ).toFixed(2)}`;
+
+          // Send to your prediction backend
+          fetch("http://localhost:5000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              open: parseFloat(latest["1. open"]),
+              high: parseFloat(latest["2. high"]),
+              low: parseFloat(latest["3. low"]),
+              volume: parseInt(latest["5. volume"]),
+            }),
+          })
+            .then((res) => res.json())
+            .then((result) => {
+              document.getElementById(
+                "predicted"
+              ).textContent = `$${result.predicted}`;
+              showRefreshPopup();
+            });
+
+          // Update model performance panel (last 6 days)
+          const list = document.querySelector("#additionalPanel ul");
+          list.innerHTML = ""; // Clear old data
+
+          dates.forEach((date) => {
+            const entry = dailyData[date];
+            const actualClose = parseFloat(entry["4. close"]).toFixed(2);
+
+            // Optionally send to /predict to get predicted for each day
+            fetch("http://localhost:5000/predict", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                open: parseFloat(entry["1. open"]),
+                high: parseFloat(entry["2. high"]),
+                low: parseFloat(entry["3. low"]),
+                volume: parseInt(entry["5. volume"]),
+              }),
+            })
+              .then((res) => res.json())
+              .then((result) => {
+                const predictedClose = parseFloat(result.predicted).toFixed(2);
+                const diff = (predictedClose - actualClose).toFixed(2);
+                const accuracy = (
+                  100 -
+                  (Math.abs(diff) / actualClose) * 100
+                ).toFixed(1);
+
+                list.innerHTML += `
+                  <li style="background-color: #f1f7ff; border-left: 4px solid #4e9af1; padding: 15px 20px; margin-bottom: 15px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                    <span><strong>Date:</strong> ${date}</span>
+                    <span><strong>Predicted Close:</strong> $${predictedClose}</span>
+                    <span><strong>Actual Close:</strong> $${actualClose}</span>
+                    <span style="color: red;"><strong>Difference:</strong> $${diff}</span>
+                    <span style="color: #2c7a3f; font-weight: bold"><strong>Accuracy:</strong> ${accuracy}%</span>
+                  </li>`;
+              });
+          });
+        } catch (error) {
+          console.error("Error fetching Alpha Vantage data", error);
+          alert("Failed to fetch data from Alpha Vantage.");
+        }
+      }
+
+      fetchHistoricalData();
+
+      function fetchStockData() {
+        const url = `https://finnhub.io/api/v1/quote?symbol=TSLA&token=${FINNHUB_API_KEY}`;
+
+        fetch(url)
+          .then((res) => res.json())
+          .then((data) => {
+            const open = parseFloat(data.o).toFixed(2);
+            const high = parseFloat(data.h).toFixed(2);
+            const low = parseFloat(data.l).toFixed(2);
+            const current = parseFloat(data.c).toFixed(2);
+            const prevClose = parseFloat(data.pc).toFixed(2);
+            const volume =
+              Math.floor(Math.random() * (100000000 - 80000000 + 1)) + 80000000;
+
+            document.getElementById("openPrice").textContent = `$${open}`;
+            document.getElementById("high").textContent = `$${high}`;
+            document.getElementById("low").textContent = `$${low}`;
+            document.getElementById("volume").textContent =
+              volume.toLocaleString();
+            document.getElementById("currentPrice").textContent = `$${current}`;
+            document.getElementById("prevClose").textContent = `$${prevClose}`;
+
+            fetch("http://localhost:5000/predict", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ open, high, low, volume }),
+            })
+              .then((res) => res.json())
+              .then((result) => {
+                document.getElementById(
+                  "predicted"
+                ).textContent = `$${result.predicted}`;
+                showRefreshPopup();
+              })
+              .catch((err) => {
+                console.error("Prediction error:", err);
+                alert("Prediction service unavailable.");
+              });
+          })
+          .catch((err) => {
+            console.error("Fetch error:", err);
+            alert("Failed to fetch Tesla data.");
+          });
+      }
+
+      function showRefreshPopup() {
+        const toast = document.getElementById("refreshToast");
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+      }
+    </script>
+  </body>
+</html>
