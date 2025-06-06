@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
 import pandas as pd
@@ -26,17 +26,12 @@ X_train_norm = scaler.fit_transform(X_train)
 y_train_mean = np.mean(y_train)
 y_train_std = np.std(y_train)
 
-@app.route("/")
-def index():
-    return render_template("ml.html")
-
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         input_data = request.get_json()
         print("Received data:", input_data)
 
-        # Prepare input for prediction
         features = [[
             float(input_data["open"]),
             float(input_data["high"]),
