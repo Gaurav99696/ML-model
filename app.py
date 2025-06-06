@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
 import pandas as pd
@@ -9,34 +9,39 @@ from sklearn.model_selection import train_test_split
 app = Flask(__name__)
 CORS(app)
 
-# Load model and data
+# Load model and minimal data for scaling
 model = load_model("tesla_stock_model.h5")
-data = pd.read_csv("tesla_stock_data.csv")
 
-# Prepare training data
-data_X = np.array(data[["Open", "High", "Low", "Volume"]])
-data_y = np.array(data["Close"])
-X_train, _, y_train, _ = train_test_split(data_X, data_y, test_size=0.3, random_state=42)
+# Load and prepare data
+try:
+    data = pd.read_csv("tesla_stock_data.csv", usecols=["Open", "High", "Low", "Volume", "Close"])
+    data_X = data[["Open", "High", "Low", "Volume"]].values
+    data_y = data["Close"].values
 
-# Normalize input features
-scaler = StandardScaler()
-X_train_norm = scaler.fit_transform(X_train)
+    # Use a small training subset to avoid memory issues
+    X_train, _, y_train, _ = train_test_split(data_X, data_y, test_size=0.9, random_state=42)
 
-# Store mean and std of target variable for inverse normalization
-y_train_mean = np.mean(y_train)
-y_train_std = np.std(y_train)
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+
+    y_train_mean = np.mean(y_train)
+    y_train_std = np.std(y_train)
+except Exception as e:
+    print("Error loading CSV or fitting scaler:", e)
+    scaler = None
+    y_train_mean = 0
+    y_train_std = 1
 
 @app.route("/")
 def index():
-    return render_template("ml.html")
+    return "Tesla Stock Predictor is running on Railway!"
 
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         input_data = request.get_json()
-        print("Received data:", input_data)
+        print("Received:", input_data)
 
-        # Prepare input for prediction
         features = [[
             float(input_data["open"]),
             float(input_data["high"]),
@@ -48,7 +53,6 @@ def predict():
         pred_norm = model.predict(features_scaled).flatten()[0]
         predicted_close = pred_norm * y_train_std + y_train_mean
 
-        print(f"Predicted close: {predicted_close:.2f}")
         return jsonify({"predicted": round(predicted_close, 2)})
 
     except Exception as e:
