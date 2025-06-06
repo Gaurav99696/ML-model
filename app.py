@@ -8,13 +8,12 @@ from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
 
-# ✅ Allow only your frontend origin
-CORS(app, resources={r"/predict": {"origins": "https://web-production-9ac0.up.railway.app"}})
+# ✅ Explicitly allow all origins using "*"
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Load model and minimal data for scaling
 model = load_model("tesla_stock_model.h5")
 
-# Load and prepare data
 try:
     data = pd.read_csv("tesla_stock_data.csv", usecols=["Open", "High", "Low", "Volume", "Close"])
     data_X = data[["Open", "High", "Low", "Volume"]].values
@@ -38,16 +37,8 @@ except Exception as e:
 def index():
     return "Tesla Stock Predictor is running on Railway!"
 
-@app.route("/predict", methods=["POST", "OPTIONS"])
+@app.route("/predict", methods=["POST"])
 def predict():
-    if request.method == "OPTIONS":
-        # ✅ Handle preflight requests
-        response = jsonify({"message": "CORS preflight"})
-        response.headers.add("Access-Control-Allow-Origin", "https://web-production-9ac0.up.railway.app")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-        return response
-
     try:
         input_data = request.get_json()
         print("Received:", input_data)
@@ -63,15 +54,11 @@ def predict():
         pred_norm = model.predict(features_scaled).flatten()[0]
         predicted_close = pred_norm * y_train_std + y_train_mean
 
-        response = jsonify({"predicted": round(predicted_close, 2)})
-        response.headers.add("Access-Control-Allow-Origin", "https://web-production-9ac0.up.railway.app")
-        return response
+        return jsonify({"predicted": round(predicted_close, 2)})
 
     except Exception as e:
         print("Prediction error:", e)
-        response = jsonify({"error": str(e)})
-        response.headers.add("Access-Control-Allow-Origin", "https://web-production-9ac0.up.railway.app")
-        return response, 400
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)
