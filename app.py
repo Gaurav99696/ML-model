@@ -7,9 +7,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
-
-# ✅ Explicitly allow all origins using "*"
 CORS(app, resources={r"/*": {"origins": "*"}})
+
 
 # Load model and minimal data for scaling
 model = load_model("tesla_stock_model.h5")
