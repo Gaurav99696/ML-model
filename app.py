@@ -7,7 +7,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
-CORS(app)
+
+# ✅ Allow only your frontend origin
+CORS(app, resources={r"/predict": {"origins": "https://web-production-9ac0.up.railway.app"}})
 
 # Load model and minimal data for scaling
 model = load_model("tesla_stock_model.h5")
@@ -36,8 +38,16 @@ except Exception as e:
 def index():
     return "Tesla Stock Predictor is running on Railway!"
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
+    if request.method == "OPTIONS":
+        # ✅ Handle preflight requests
+        response = jsonify({"message": "CORS preflight"})
+        response.headers.add("Access-Control-Allow-Origin", "https://web-production-9ac0.up.railway.app")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        return response
+
     try:
         input_data = request.get_json()
         print("Received:", input_data)
@@ -53,11 +63,15 @@ def predict():
         pred_norm = model.predict(features_scaled).flatten()[0]
         predicted_close = pred_norm * y_train_std + y_train_mean
 
-        return jsonify({"predicted": round(predicted_close, 2)})
+        response = jsonify({"predicted": round(predicted_close, 2)})
+        response.headers.add("Access-Control-Allow-Origin", "https://web-production-9ac0.up.railway.app")
+        return response
 
     except Exception as e:
         print("Prediction error:", e)
-        return jsonify({"error": str(e)}), 400
+        response = jsonify({"error": str(e)})
+        response.headers.add("Access-Control-Allow-Origin", "https://web-production-9ac0.up.railway.app")
+        return response, 400
 
 if __name__ == "__main__":
     app.run(debug=True)
