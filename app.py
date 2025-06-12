@@ -36,7 +36,7 @@ except Exception as e:
 
 @app.route("/")
 def index():
-    return "Tesla Stock Predictor is running on Railway..!!"
+    return "Tesla Stock Predictor is running on Railway..!"
 
 @app.route("/predict", methods=["POST"])
 def predict():
